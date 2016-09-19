@@ -12,6 +12,22 @@ nand128m()
 	[ `sed -n  "/^${NEW}$/p" ${EDIT_FILE} | wc -l` -eq 1 ] && echo OK. ;
 }
 
+nomodule()
+{
+	sed -i '/=m$/s/^/# /g' .config
+	sed -i 's/=m$/ is not set/g' .config
+}
+
+cfg15051()
+{
+	wget -O config.diff https://downloads.openwrt.org/chaos_calmer/15.05.1/ar71xx/nand/config.diff
+	rm -rf .config
+	make defconfig
+	cat config.diff >> .config
+	make defconfig
+	make menuconfig
+}
+
 ################################################################
 if [ -z "$1" ]; then
 	cat $0 | grep \(\)$
