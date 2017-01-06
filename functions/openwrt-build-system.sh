@@ -14,27 +14,10 @@ openwrt_build_system_install()
 	apt-get clean
 }
 
-# 使用全部128M NAND 空间
-# TOP_DIR $1 OpenWrt Buildroot 构建根目录路径
-wndr4300_nand128m()
-{
-	local OLD='wndr4300_mtdlayout=mtdparts=ar934x-nfc:256k(u-boot)ro,256k(u-boot-env)ro,256k(caldata),512k(pot),2048k(language),512k(config),3072k(traffic_meter),2048k(kernel),23552k(ubi),25600k@0x6c0000(firmware),256k(caldata_backup),-(reserved)'
-	local NEW='wndr4300_mtdlayout=mtdparts=ar934x-nfc:256k(u-boot)ro,256k(u-boot-env)ro,256k(caldata),512k(pot),2048k(language),512k(config),3072k(traffic_meter),2048k(kernel),121856k(ubi),123904k@0x6c0000(firmware),256k(caldata_backup),-(reserved)'
-	local EDIT_FILE='target/linux/ar71xx/image/Makefile'
-	[ -n "$1" ] && local EDIT_FILE="$1/${EDIT_FILE}"
-	
-	[ ! -f "${EDIT_FILE}" ] && print_error "File not found: ${EDIT_FILE}" && return 1
-	
-#	sed -n  "/^${OLD}$/p" ${EDIT_FILE};
-	sed -i "s/^${OLD}$/${NEW}/g" ${EDIT_FILE};
-#	sed -n  "/^${NEW}$/p" ${EDIT_FILE};
-	[ `sed -n  "/^${NEW}$/p" ${EDIT_FILE} | wc -l` -eq 1 ] && echo "WNDR4300/WNDR3700v4 NAND 128M OK."
-}
-
 # Image Builder 镜像生成器
 image_build_system()
 {
-	# 无效参数
+	# 缺少参数
 	[ -z "$1" ] && print_error "Missing parameters 1." && return 1
 	local ARCH=$1
 	
