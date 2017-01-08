@@ -10,13 +10,21 @@ ls_color()
 # 安装
 install()
 {
-	[ `which dropbear` ] || local DEB_LIST="dropbear openssh-sftp-server vim"
+	[ `which sudo` ]     || local DEB_LIST="sudo"
+	[ `which dropbear` ] || local DEB_LIST="${DEB_LIST} dropbear openssh-sftp-server vim"
 	[ `which git` ]      || local DEB_LIST="${DEB_LIST} git-core bash-completion"
 	
 	[ -z "${DEB_LIST}" ] && return 0
 	
 	apt-get update || return 1
 	apt-get install -y ${DEB_LIST}
+	
+	if [ `which sudo` ]; then
+		useradd -m -s /bin/bash debian
+		echo 'debian:debian' | chpasswd
+		echo 'debian ALL=NOPASSWD: ALL' > /etc/sudoers.d/debian
+		chmod 440 /etc/sudoers.d/debian
+	fi
 	
 	if [ `which git` ]; then
 		git config --global user.name  'yinping'
