@@ -39,6 +39,9 @@ set_git()
 		git config --global user.email 'yp_ren@hotmail.com'
 		git config --global color.ui true
 		git config --global core.autocrlf input
+		
+		[ -d "/scripts" ] \
+			|| git clone https://github.com/renyinping/linux-scripts.git /scripts
 	fi
 }
 
