@@ -1,91 +1,111 @@
 #!/bin/bash
 
-# 设置ls彩色输出
-set_ls()
-{
-	[ `cat /etc/bash.bashrc | sed -n '/^alias ls=/p' | wc -l` -eq 0 ] \
-		&& echo "alias ls='ls --color=auto'" >> /etc/bash.bashrc
-}
+alias  ls='ls --color=auto'
+export LANG="zh_CN.UTF-8"
+export LANGUAGE="zh_CN:en_US:en"
 
-# 设置语言
-set_locale()
+config_sudo()
 {
-	if [ `which locale-gen` ]; then
-		sed -i 's/# zh_CN.UTF-8 UTF-8/zh_CN.UTF-8 UTF-8/g' /etc/locale.gen
-		sed -i 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/g' /etc/locale.gen
-		[ `cat /etc/bash.bashrc | sed -n '/^LANG=/p' | wc -l` -eq 0 ] \
-			&& echo 'LANG="zh_CN.UTF-8"' >> /etc/bash.bashrc
-		[ `cat /etc/bash.bashrc | sed -n '/^LANGUAGE=/p' | wc -l` -eq 0 ] \
-			&& echo 'LANGUAGE="zh_CN:en_US:en"' >> /etc/bash.bashrc
+	[ -n "$1" ] && local USER="$1"
+	
+	[ "${USER}" = "root" ] && return 0
+	
+	if (which sudo); then
+		useradd -m -s /bin/bash ${USER}
+		echo "${USER}:${USER}" | chpasswd
+		echo "${USER} ALL=NOPASSWD: ALL" > /etc/sudoers.d/${USER}
+		chmod 440 /etc/sudoers.d/${USER}
+		echo "Configure sudo to complete."
 	fi
 }
 
-# 设置sudo
-set_sudo()
+config_git()
 {
-	if [ `which sudo` ]; then
-		useradd -m -s /bin/bash debian
-		echo 'debian:debian' | chpasswd
-		echo 'debian ALL=NOPASSWD: ALL' > /etc/sudoers.d/debian
-		chmod 440 /etc/sudoers.d/debian
-	fi
-}
-
-# 设置git
-set_git()
-{
-	if [ `which git` ]; then
+	if (which git); then
 		git config --global user.name  'yinping'
 		git config --global user.email 'yp_ren@hotmail.com'
 		git config --global color.ui true
 		git config --global core.autocrlf input
-		
-		[ -d "/scripts" ] \
-			|| git clone https://github.com/renyinping/linux-scripts.git /scripts
+		echo "Configure git to complete."
 	fi
 }
 
-# 安装
+config_locales()
+{
+	if (which locale-gen); then
+		sed -i 's/# zh_CN.UTF-8 UTF-8/zh_CN.UTF-8 UTF-8/g' /etc/locale.gen
+		sed -i 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/g' /etc/locale.gen
+		locale-gen
+		echo "Configure locales to complete."
+	fi
+}
+
+config()
+{
+	[ -z "$*" ] && return 0
+	
+	for i in "$*"; do
+		case $i in
+			dropbear)             echo "root:root" | chpasswd;;
+			locale-gen | locales) config_locales;;
+			git)                  config_git;;
+			sudo)                 ;;
+			*)                    ;;
+		esac
+	done
+}
+
 install()
 {
-	[ `which sudo` ]       || local DEB_LIST="sudo"
-	[ `which locale-gen` ] || local DEB_LIST="${DEB_LIST} locales" 
-	[ `which dropbear` ]   || local DEB_LIST="${DEB_LIST} dropbear openssh-sftp-server vim"
-	[ `which git` ]        || local DEB_LIST="${DEB_LIST} git-core bash-completion"
+	[ -z "$*" ] && return 0
+	
+	for i in "$*"; do
+		which $i && continue
+		case $i in
+			dropbear)  local SSHD='${DEB_LIST} dropbear openssh-sftp-server vim';;
+			local-gen) local LOCALES='${DEB_LIST} locales';;
+			git)       local GIT='${DEB_LIST} git-core bash-completion vim';;
+			sudo)      local SUDO='${DEB_LIST} sudo';;
+			vim)       local VIM='${DEB_LIST} vim';;
+			*)         ;;
+		esac
+	done
 	
 	[ -z "${DEB_LIST}" ] && return 0
+	echo "List: ${DEB_LIST}"
 	
 	apt-get update || return 1
 	apt-get install -y ${DEB_LIST}
 	
-	set_ls
-	set_locale
-	set_sudo
-	set_git
+	config $*
 }
 
-# 启动ssh服务
-start_sshd()
+start_dropbear()
 {
-	if [ `ps -ef | sed -n '/dropbear -p 2022$/p' | wc -l` -eq 0 ]; then
+	if ! (which dropbear); then
+		install dropbear
+	fi
+	
+	if ! (pgrep dropbear); then
 		dropbear -p 2022
 		sleep 3
-	else
-		install
 	fi
 	
 	ps -ef | sed -n '/dropbear -p 2022$/p'
-	echo ""
 }
 
-################################################################
-if [ -z "$1" ]; then
-	start_sshd
-	cat $0 | grep \(\)$
-else
-	if [ `cat $0 | grep ^$1\(\)$ | wc -l` -eq 1 ]; then
-		$*
-	else
-		echo "Invalid parameter"
-	fi
-fi
+start()
+{
+	for i in $*; do
+		which $i && continue
+		case $i in
+			dropbear)  start_dropbear;;
+			local-gen) ;;
+			git)       ;;
+			sudo)      ;;
+			*)         ;;
+		esac
+	done
+}
+
+start_dropbear
