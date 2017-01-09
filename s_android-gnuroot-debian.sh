@@ -46,11 +46,11 @@ config()
 	
 	for i in $*; do
 		case $i in
-			dropbear)             echo "root:root" | chpasswd;;
+			dropbear)           echo "root:root" | chpasswd;;
 			locale-gen|locales) config_locales;;
-			git)                  config_git;;
-			sudo)                 ;;
-			*)                    ;;
+			git)                config_git;;
+			sudo)               ;;
+			*)                  ;;
 		esac
 	done
 }
@@ -62,12 +62,12 @@ install()
 	for i in $*; do
 		echo Adding $i ...
 		case $i in
-			dropbear)             local DEB_LIST="${DEB_LIST} dropbear openssh-sftp-server vim" ;;
+			dropbear)           local DEB_LIST="${DEB_LIST} dropbear openssh-sftp-server vim" ;;
 			locale-gen|locales) local DEB_LIST="${DEB_LIST} locales" ;;
-			git)                  local DEB_LIST="${DEB_LIST} git-core bash-completion vim" ;;
-			sudo)                 local DEB_LIST="${DEB_LIST} sudo" ;;
-			vim)                  local DEB_LIST="${DEB_LIST} vim" ;;
-			*)                    ;;
+			git)                local DEB_LIST="${DEB_LIST} git-core bash-completion vim" ;;
+			sudo)               local DEB_LIST="${DEB_LIST} sudo" ;;
+			vim)                local DEB_LIST="${DEB_LIST} vim" ;;
+			*)                  ;;
 		esac
 	done
 	
