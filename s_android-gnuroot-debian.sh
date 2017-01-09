@@ -44,10 +44,10 @@ config()
 {
 	[ -z "$*" ] && return 0
 	
-	for i in "$*"; do
+	for i in $*; do
 		case $i in
 			dropbear)             echo "root:root" | chpasswd;;
-			locale-gen | locales) config_locales;;
+			locale-gen|locales) config_locales;;
 			git)                  config_git;;
 			sudo)                 ;;
 			*)                    ;;
@@ -59,20 +59,20 @@ install()
 {
 	[ -z "$*" ] && return 0
 	
-	for i in "$*"; do
-		which $i && continue
+	for i in $*; do
+		echo Adding $i ...
 		case $i in
-			dropbear)  local SSHD='${DEB_LIST} dropbear openssh-sftp-server vim';;
-			local-gen) local LOCALES='${DEB_LIST} locales';;
-			git)       local GIT='${DEB_LIST} git-core bash-completion vim';;
-			sudo)      local SUDO='${DEB_LIST} sudo';;
-			vim)       local VIM='${DEB_LIST} vim';;
-			*)         ;;
+			dropbear)             local DEB_LIST="${DEB_LIST} dropbear openssh-sftp-server vim" ;;
+			locale-gen|locales) local DEB_LIST="${DEB_LIST} locales" ;;
+			git)                  local DEB_LIST="${DEB_LIST} git-core bash-completion vim" ;;
+			sudo)                 local DEB_LIST="${DEB_LIST} sudo" ;;
+			vim)                  local DEB_LIST="${DEB_LIST} vim" ;;
+			*)                    ;;
 		esac
 	done
 	
 	[ -z "${DEB_LIST}" ] && return 0
-	echo "List: ${DEB_LIST}"
+	echo "Install list: ${DEB_LIST}"
 	
 	apt-get update || return 1
 	apt-get install -y ${DEB_LIST}
@@ -99,11 +99,11 @@ start()
 	for i in $*; do
 		which $i && continue
 		case $i in
-			dropbear)  start_dropbear;;
-			local-gen) ;;
-			git)       ;;
-			sudo)      ;;
-			*)         ;;
+			dropbear)           start_dropbear;;
+			locale-gen|locales) ;;
+			git)                ;;
+			sudo)               ;;
+			*)                  ;;
 		esac
 	done
 }
