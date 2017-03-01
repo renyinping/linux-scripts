@@ -1,0 +1,39 @@
+#!/bin/sh
+
+. ${0%/*}/functions
+
+infile=$1
+action=${2:-help}
+shift 2
+
+# 帮助函数
+# Help function
+help()
+{
+	local __SED=/^[^_].*\(\)$/=
+	
+	for i in `sed -n "${__SED}" "$0"`
+	do
+		local n=$i
+		local cmd=`sed -n "$((n))p" "$0"`
+		local description=`sed -n "$((n-1))p" "$0"`
+		echo -e "${cmd%()} \t ${description#\#}"
+	done
+	
+	for i in `sed -n "${__SED}" "${infile}"`
+	do
+		local n=$i
+		local cmd=`sed -n "$((n))p" "${infile}"`
+		local description=`sed -n "$((n-1))p" "${infile}"`
+		echo -e "${cmd%()} \t ${description#\#}"
+	done
+}
+
+
+. "$infile"
+if [ `cat "$0" "${infile}" | sed -n "/^${action}()$/p" | wc -l` -ne 1 ]
+then
+	print_ng "Invalid parameter"
+	action=help
+fi
+$action "$@"

@@ -1,0 +1,66 @@
+#!/bin/sh
+
+# 打印红色字符串 $1=字符串
+print_red()
+{
+	echo -e "\033[31m$1\033[0m"
+}
+
+# 打印绿色字符串 $1=字符串
+print_green()
+{
+	echo -e "\033[32m$1\033[0m"
+}
+
+# 打印黄色字符串 $1=字符串
+print_yellow()
+{
+	echo -e "\033[33m$1\033[0m"
+}
+
+# 打印失败信息 $1=字符串
+print_ng()
+{
+	if [ -z "$1" ]
+	then
+		print_red "[NG]"
+	else
+		print_red "[NG] $1"
+	fi
+}
+
+# 打印成功信息 $1=字符串
+print_ok()
+{
+	if [ -z "$1" ]
+	then
+		print_green "[OK]"
+	else
+		print_green "[OK] $1"
+	fi
+}
+
+# 打印结果信息 $1=$? $2=字符串
+print_result()
+{
+	[ -z "$1" ] && return 1
+	
+	if [ "$1" = 0 ]
+	then
+		print_ok "$2"
+	else
+		print_ng "$2"
+	fi
+	
+	return $1
+}
+
+# 下载 $url $filename
+download()
+{
+	[ -z "$1" ] && return 1
+	[ -z "$2" ] && return 1
+	which curl && curl -o $2 $1 && return 0
+	which wget && wget -O $2 $1 && return 0
+	return 1
+}
